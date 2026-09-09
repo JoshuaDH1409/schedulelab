@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ScheduleLab</title>
+<style>
+:root{
+  --bg:#0b1220;--surface:#111827;--surface2:#1a2332;--border:#2d3a4f;
+  --text:#e8eef7;--muted:#94a3b8;--accent:#3b82f6;--accent-h:#2563eb;
+  --ok:#22c55e;--radius:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;font-family:Inter,Segoe UI,system-ui,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(900px 480px at 8% -8%,#1e3a5f 0%,transparent 55%),
+    radial-gradient(700px 400px at 100% 0%,#16263d 0%,transparent 50%),
+    linear-gradient(160deg,#0f172a,#0b1220);
+  padding:2rem 1.25rem 3rem;
+}
+.wrap{max-width:960px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:.85rem;margin-bottom:.35rem}
+.logo{
+  width:40px;height:40px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(135deg,#3b82f6,#06b6d4);
+  display:grid;place-items:center;font-weight:800;font-size:.95rem;
+  box-shadow:0 4px 14px rgba(59,130,246,.35);
+}
+h1{margin:0;font-size:1.55rem;letter-spacing:-.02em}
+p.lead{color:var(--muted);margin:.3rem 0 1.6rem;font-size:.95rem;line-height:1.45}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.15rem;align-items:start}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.3rem 1.35rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);
+}
+.card h2{margin:0 0 .7rem;font-size:1.05rem;font-weight:600}
+.hint{color:var(--muted);font-size:.88rem;margin:0 0 1rem;line-height:1.45}
+.hint code{font-size:.82rem;background:var(--surface2);padding:.1rem .35rem;border-radius:4px}
+
+/* Dropzone — fixed layout, no overlap */
+.drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.35rem;min-height:120px;width:100%;
+  border:1.5px dashed var(--border);border-radius:12px;
+  padding:1.25rem 1rem;text-align:center;color:var(--muted);
+  background:var(--surface2);cursor:pointer;
+  transition:border-color .15s,background .15s;
+  margin:0; /* no colliding margins */
+}
+.drop:hover,.drop.dragover{border-color:var(--accent);background:#1e2d45}
+.drop .icon{font-size:1.4rem;line-height:1;margin-bottom:.15rem;opacity:.85}
+.drop .title{color:var(--text);font-weight:600;font-size:.95rem;line-height:1.3}
+.drop .meta{font-size:.82rem;line-height:1.3;color:var(--muted)}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)}
+
+.file-row{
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+  margin-top:.85rem;font-size:.88rem;color:var(--muted);min-height:1.4rem;
+}
+.file-row .chip{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:#1e293b;border:1px solid var(--border);border-radius:999px;
+  padding:.25rem .7rem;color:var(--text);font-size:.82rem;
+}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+button,.btn{
+  appearance:none;background:var(--accent);color:#fff;border:0;
+  border-radius:10px;padding:.65rem 1.15rem;font-weight:600;font-size:.9rem;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  transition:background .15s,opacity .15s;min-height:40px;
+}
+button:hover:not(:disabled){background:var(--accent-h)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.btn.ghost{background:#1e293b;border:1px solid var(--border);color:var(--text)}
+.btn.ghost:hover:not(:disabled){background:var(--surface2)}
+.spinner{
+  width:14px;height:14px;border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.row{display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem}
+.row h2{margin:0}
+.table-wrap{overflow-x:auto;width:100%}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:.6rem .45rem;border-bottom:1px solid #1e293b;text-align:left}
+th{color:var(--muted);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.foot{margin-top:1.75rem;text-align:center;color:#64748b;font-size:.8rem}
+
+/* Toast */
+.toast-host{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:50;
+  display:flex;flex-direction:column;gap:.6rem;pointer-events:none;
+  max-width:min(360px,calc(100vw - 2rem));
+}
+.toast{
+  pointer-events:auto;background:#0f1f17;border:1px solid rgba(34,197,94,.4);
+  color:#bbf7d0;padding:.85rem 1rem;border-radius:12px;
+  box-shadow:0 12px 32px rgba(0,0,0,.4);font-size:.9rem;font-weight:500;
+  display:flex;align-items:flex-start;gap:.65rem;
+  animation:toast-in .25s ease-out;
+}
+.toast .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);margin-top:.35rem;flex-shrink:0}
+@keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="logo" aria-hidden="true">SL</div><h1>ScheduleLab</h1></div>
+  <p class="lead">Importa maestros desde Excel y consulta la lista en SQL Server</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Subir Excel</h2>
+      <p class="hint">Columnas: <code>nombre</code>, <code>horas</code> (primera fila = encabezado).</p>
+
+      <label class="drop" id="dropzone" for="fileInput">
+        <span class="icon" aria-hidden="true">📄</span>
+        <span class="title">Arrastra un .xlsx aquí</span>
+        <span class="meta">o haz clic para seleccionar</span>
+      </label>
+      <input type="file" id="fileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
+
+      <div class="file-row" id="fileRow">
+        <span class="chip" id="fileChip">maestros.xlsx · 24 KB</span>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="btnImport">Importar</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>Maestros</h2>
+        <button class="btn ghost" type="button" id="btnRefresh">Actualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Horas</th></tr></thead>
+          <tbody id="maestrosBody">
+            <tr><td>Ana Ruiz</td><td>20</td></tr>
+            <tr><td>Luis Mendoza</td><td>18</td></tr>
+            <tr><td>Carla Soto</td><td>22</td></tr>
+            <tr><td>Diego Peña</td><td>16</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <p class="foot">ScheduleLab · Node.js + ExcelJS + mssql</p>
+</div>
+
+<div class="toast-host" id="toastHost" aria-live="polite"></div>
+
+<script>
+(function () {
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileChip = document.getElementById('fileChip');
+  const btnImport = document.getElementById('btnImport');
+  const btnRefresh = document.getElementById('btnRefresh');
+  const toastHost = document.getElementById('toastHost');
+
+  let busy = false;
+  let selectedLabel = 'maestros.xlsx · 24 KB';
+
+  function formatSize(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function setFileLabel(name, sizeText) {
+    selectedLabel = name + (sizeText ? ' · ' + sizeText : '');
+    fileChip.textContent = selectedLabel;
+  }
+
+  function showToast(msg) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = '<span class="dot" aria-hidden="true"></span><span></span>';
+    el.lastElementChild.textContent = msg;
+    toastHost.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .3s';
+      setTimeout(function () { el.remove(); }, 320);
+    }, 2800);
+  }
+
+  fileInput.addEventListener('change', function () {
+    const f = fileInput.files && fileInput.files[0];
+    if (f) setFileLabel(f.name, formatSize(f.size));
+  });
+
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    });
+  });
+  dropzone.addEventListener('drop', function (e) {
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!f) return;
+    try { fileInput.files = e.dataTransfer.files; } catch (_) {}
+    setFileLabel(f.name, formatSize(f.size));
+  });
+
+  btnImport.addEventListener('click', function () {
+    if (busy) return;
+    busy = true;
+    btnImport.disabled = true;
+    btnImport.innerHTML = '<span class="spinner" aria-hidden="true"></span>Importando…';
+
+    setTimeout(function () {
+      btnImport.disabled = false;
+      btnImport.textContent = 'Importar';
+      busy = false;
+      showToast('Importación simulada: 4 maestros listos');
+    }, 900);
+  });
+
+  btnRefresh.addEventListener('click', function () {
+    showToast('Lista actualizada (demo)');
+  });
+})();
+</script>
+</body>
+</html>
