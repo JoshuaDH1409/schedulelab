@@ -13,4 +13,3 @@ const config = {
 };
 
 module.exports = { sql, config };
-// This module exports the SQL library and the database configuration object.
