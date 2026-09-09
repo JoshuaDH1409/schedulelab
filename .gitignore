@@ -1,6 +1,6 @@
-<<<<<<< HEAD
-node_modules
-=======
 node_modules/
 .env
->>>>>>> 49d66d342758c2ab9e1b558522bb6f2e23ef5fca
+uploads/*
+!uploads/.gitkeep
+.DS_Store
+*.log

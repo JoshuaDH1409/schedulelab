@@ -1,3 +1,6 @@
+const ExcelJS = require('exceljs');
+const { sql, config } = require('../config/db');
+
 async function importarMaestrosDesdeExcel(filePath) {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(filePath);
@@ -6,6 +9,7 @@ async function importarMaestrosDesdeExcel(filePath) {
   const pool = await sql.connect(config);
 
   try {
+    const inserts = [];
     sheet.eachRow((row, index) => {
       if (index === 1) return; // Saltar encabezado
 
@@ -13,19 +17,27 @@ async function importarMaestrosDesdeExcel(filePath) {
       const horas = row.getCell(2).value;
 
       if (!nombre || isNaN(horas)) {
-        throw new Error(`Datos inválidos en fila ${index + 1}`);
+        throw new Error(`Datos inválidos en fila ${index}`);
       }
-      console.log(`Fila ${index + 1}: nombre=${nombre}, horas=${horas}`);
+      console.log(`Fila ${index}: nombre=${nombre}, horas=${horas}`);
 
-      pool.request()
-        .input('nombre', sql.NVarChar, nombre)
-        .input('horas', sql.Int, horas)
-        .query('INSERT INTO Maestros (nombre, horas_disponibles) VALUES (@nombre, @horas)');
+      inserts.push(
+        pool
+          .request()
+          .input('nombre', sql.NVarChar, String(nombre))
+          .input('horas', sql.Int, Number(horas))
+          .query(
+            'INSERT INTO Maestros (nombre, horas_disponibles) VALUES (@nombre, @horas)'
+          )
+      );
     });
+    await Promise.all(inserts);
   } catch (err) {
-    console.error("❌ Error al procesar el archivo:", err.message);
+    console.error('Error al procesar el archivo:', err.message);
     throw err;
   } finally {
     await sql.close();
   }
 }
+
+module.exports = { importarMaestrosDesdeExcel };

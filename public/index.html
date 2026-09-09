@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ScheduleLab — Importación de maestros</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface2: #243044;
+      --border: #2d3a4f;
+      --text: #e8eef7;
+      --muted: #8b9bb4;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --ok: #22c55e;
+      --err: #ef4444;
+      --radius: 12px;
+      --shadow: 0 8px 32px rgba(0,0,0,.35);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1e3a5f 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #1a2f4a 0%, transparent 50%),
+        var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 3rem;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .logo {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 1.1rem;
+      box-shadow: 0 4px 16px rgba(59,130,246,.4);
+    }
+    h1 { margin: 0; font-size: 1.65rem; letter-spacing: -0.02em; }
+    .tagline { margin: .2rem 0 0; color: var(--muted); font-size: .95rem; }
+    .grid {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 760px) {
+      .grid { grid-template-columns: 1fr 1.1fr; align-items: start; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.35rem 1.4rem;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      margin: 0 0 .85rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: .85rem;
+      margin: 0 0 1rem;
+      line-height: 1.45;
+    }
+    .drop {
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      background: var(--surface2);
+      transition: border-color .15s, background .15s;
+      cursor: pointer;
+    }
+    .drop.dragover {
+      border-color: var(--accent);
+      background: #1e2d45;
+    }
+    .drop strong { display: block; margin-bottom: .35rem; }
+    .drop span { color: var(--muted); font-size: .85rem; }
+    input[type="file"] { display: none; }
+    .file-name {
+      margin-top: .75rem;
+      font-size: .9rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      margin-top: 1rem;
+    }
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 8px;
+      padding: .65rem 1.1rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface2); }
+    .status {
+      margin-top: 1rem;
+      padding: .75rem .9rem;
+      border-radius: 8px;
+      font-size: .9rem;
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.ok { background: rgba(34,197,94,.12); color: #86efac; border: 1px solid rgba(34,197,94,.3); }
+    .status.err { background: rgba(239,68,68,.12); color: #fca5a5; border: 1px solid rgba(239,68,68,.3); }
+    .status.info { background: rgba(59,130,246,.12); color: #93c5fd; border: 1px solid rgba(59,130,246,.3); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+    th, td {
+      text-align: left;
+      padding: .65rem .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+    tbody tr:hover { background: rgba(255,255,255,.02); }
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 1.5rem .5rem;
+      font-size: .9rem;
+    }
+    .table-wrap { overflow-x: auto; }
+    footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: .8rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo" aria-hidden="true">SL</div>
+      <div>
+        <h1>ScheduleLab</h1>
+        <p class="tagline">Importa maestros desde Excel y consulta la lista en SQL Server</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Subir Excel</h2>
+        <p class="hint">
+          El archivo debe tener columnas <strong>nombre</strong> y <strong>horas</strong>
+          (fila 1 = encabezado). Se insertan en la tabla <code>Maestros</code>.
+        </p>
+        <label class="drop" id="dropzone" for="fileInput">
+          <strong>Arrastra un .xlsx aquí</strong>
+          <span>o haz clic para seleccionar</span>
+        </label>
+        <input type="file" id="fileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+        <div class="file-name" id="fileName">Ningún archivo seleccionado</div>
+        <div class="actions">
+          <button type="button" class="btn-primary" id="btnUpload" disabled>Importar</button>
+        </div>
+        <div class="status" id="uploadStatus" role="status"></div>
+      </section>
+
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.85rem">
+          <h2 style="margin:0">Maestros</h2>
+          <button type="button" class="btn-ghost" id="btnRefresh">Actualizar</button>
+        </div>
+        <div class="status info show" id="listStatus">Cargando…</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Horas</th>
+              </tr>
+            </thead>
+            <tbody id="maestrosBody">
+              <tr><td colspan="2" class="empty">Sin datos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <footer>ScheduleLab · Node.js + ExcelJS + mssql · Requiere SQL Server</footer>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const fileName = document.getElementById('fileName');
+    const btnUpload = document.getElementById('btnUpload');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const listStatus = document.getElementById('listStatus');
+    const maestrosBody = document.getElementById('maestrosBody');
+
+    let selectedFile = null;
+
+    function setUploadStatus(type, msg) {
+      uploadStatus.className = 'status show ' + type;
+      uploadStatus.textContent = msg;
+    }
+
+    function setListStatus(type, msg) {
+      if (!msg) {
+        listStatus.className = 'status';
+        listStatus.textContent = '';
+        return;
+      }
+      listStatus.className = 'status show ' + type;
+      listStatus.textContent = msg;
+    }
+
+    function pickFile(file) {
+      selectedFile = file || null;
+      fileName.textContent = selectedFile ? selectedFile.name : 'Ningún archivo seleccionado';
+      btnUpload.disabled = !selectedFile;
+    }
+
+    fileInput.addEventListener('change', () => pickFile(fileInput.files[0]));
+
+    ;['dragenter', 'dragover'].forEach((ev) => {
+      dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+    ;['dragleave', 'drop'].forEach((ev) => {
+      dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        pickFile(file);
+        fileInput.files = e.dataTransfer.files;
+      }
+    });
+
+    btnUpload.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      btnUpload.disabled = true;
+      setUploadStatus('info', 'Importando…');
+      const fd = new FormData();
+      fd.append('file', selectedFile);
+      try {
+        const res = await fetch('/upload', { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Error en la importación');
+        setUploadStatus('ok', data.message || 'Importado correctamente');
+        pickFile(null);
+        fileInput.value = '';
+        await loadMaestros();
+      } catch (err) {
+        setUploadStatus('err', err.message || 'Error al subir');
+        btnUpload.disabled = !selectedFile;
+      }
+    });
+
+    function cellValue(row, keys) {
+      for (const k of keys) {
+        if (row[k] != null && row[k] !== '') return row[k];
+      }
+      return '—';
+    }
+
+    async function loadMaestros() {
+      setListStatus('info', 'Cargando…');
+      try {
+        const res = await fetch('/maestros');
+        const data = await res.json().catch(() => ([]));
+        if (!res.ok) throw new Error(data.error || 'No se pudo obtener la lista');
+        const rows = Array.isArray(data) ? data : [];
+        if (!rows.length) {
+          maestrosBody.innerHTML = '<tr><td colspan="2" class="empty">No hay maestros registrados</td></tr>';
+          setListStatus('info', 'Lista vacía (¿SQL Server conectado?)');
+          return;
+        }
+        maestrosBody.innerHTML = rows
+          .map((r) => {
+            const nombre = cellValue(r, ['nombre', 'Nombre', 'name']);
+            const horas = cellValue(r, ['horas_disponibles', 'horas', 'Horas']);
+            return `<tr><td>${escapeHtml(String(nombre))}</td><td>${escapeHtml(String(horas))}</td></tr>`;
+          })
+          .join('');
+        setListStatus('', '');
+      } catch (err) {
+        maestrosBody.innerHTML = '<tr><td colspan="2" class="empty">Error al cargar</td></tr>';
+        setListStatus('err', err.message || 'Error de conexión con SQL Server');
+      }
+    }
+
+    function escapeHtml(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    btnRefresh.addEventListener('click', loadMaestros);
+    loadMaestros();
+  </script>
+</body>
+</html>
