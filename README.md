@@ -1,5 +1,7 @@
 # ScheduleLab
 
+**Demo:** https://joshuadh1409.github.io/schedulelab/
+
 Importa maestros desde un Excel (`.xlsx`) a SQL Server y lista el resultado en una UI mínima.
 
 <!-- screenshots -->
