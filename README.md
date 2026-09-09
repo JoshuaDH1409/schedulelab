@@ -2,6 +2,12 @@
 
 Importa maestros desde un Excel (`.xlsx`) a SQL Server y lista el resultado en una UI mínima.
 
+<!-- screenshots -->
+## Vista
+
+![ScheduleLab](docs/screenshots/ui.png)
+
+
 ## Qué hace
 
 1. UI estática en `public/` para subir el Excel y ver maestros
